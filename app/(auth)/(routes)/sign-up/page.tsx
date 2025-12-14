@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,15 @@ import Link from "next/link";
 import axios, { AxiosError } from "axios";
 import { Check, X, Eye, EyeOff, ChevronLeft } from "lucide-react";
 import Image from "next/image";
+import ReCAPTCHA from "react-google-recaptcha";
 
 export default function SignUpPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [formData, setFormData] = useState({
     fullName: "",
     phoneNumber: "",
@@ -51,8 +54,17 @@ export default function SignUpPage() {
       return;
     }
 
+    if (!recaptchaToken) {
+      toast.error("الرجاء التحقق من أنك لست روبوت");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await axios.post("/api/auth/register", formData);
+      const response = await axios.post("/api/auth/register", {
+        ...formData,
+        recaptchaToken,
+      });
       
       if (response.data.success) {
         toast.success("تم إنشاء الحساب بنجاح");
@@ -70,15 +82,24 @@ export default function SignUpPage() {
           toast.error("رقم الهاتف لا يمكن أن يكون نفس رقم هاتف الوالد");
         } else if (errorMessage.includes("Passwords do not match")) {
           toast.error("كلمات المرور غير متطابقة");
+        } else if (errorMessage.includes("reCAPTCHA")) {
+          toast.error("فشل التحقق من reCAPTCHA. الرجاء المحاولة مرة أخرى");
         } else {
           toast.error("حدث خطأ أثناء إنشاء الحساب");
         }
       } else {
         toast.error("حدث خطأ أثناء إنشاء الحساب");
       }
+      // Reset reCAPTCHA on error
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleRecaptchaChange = (token: string | null) => {
+    setRecaptchaToken(token);
   };
 
   return (
@@ -246,10 +267,19 @@ export default function SignUpPage() {
               </div>
             </div>
 
+            <div className="flex justify-center">
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ""}
+                onChange={handleRecaptchaChange}
+                theme="light"
+              />
+            </div>
+
             <Button
               type="submit"
               className="w-full h-10 bg-brand hover:bg-brand/90 text-white"
-              disabled={isLoading || !passwordChecks.isValid}
+              disabled={isLoading || !passwordChecks.isValid || !recaptchaToken}
             >
               {isLoading ? "جاري إنشاء الحساب..." : "إنشاء حساب"}
             </Button>
