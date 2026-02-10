@@ -7,9 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:seed": "ts-node --project tsconfig.scripts.json prisma/seed.ts",
     "prisma:studio": "prisma studio --port 5556",
     "backup:db": "powershell -ExecutionPolicy Bypass -File scripts/backup-db.ps1",
+    "migrate:db": "ts-node --project tsconfig.scripts.json scripts/migrate-db.ts",
+    "migrate:db:run": "powershell -ExecutionPolicy Bypass -File scripts/migrate-db.ps1",
+    "fix:prisma": "powershell -ExecutionPolicy Bypass -File scripts/fix-prisma.ps1",
     "fix:quiz-options": "node scripts/fix-quiz-options.js",
     "test:quiz-options": "node scripts/test-quiz-options.js",
     "postinstall": "prisma generate"
@@ -99,6 +102,6 @@
     "typescript": "^5"
   },
   "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "seed": "ts-node --project tsconfig.scripts.json prisma/seed.ts"
   }
 }
