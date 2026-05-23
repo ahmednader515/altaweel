@@ -30,7 +30,7 @@ export const Footer = () => {
             : ''
         }`}>
           <div className="inline-block bg-brand/10 border-2 border-brand/20 rounded-lg px-6 py-3 mb-4">
-            <p className="font-semibold text-lg text-brand"> واتساب : 01202941000</p>
+            <p className="font-semibold text-lg text-brand"> واتساب : 01090845823</p>
           </div>
           
           <p>© {new Date().getFullYear()} Mordesu Studio. جميع الحقوق محفوظة</p>
